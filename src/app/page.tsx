@@ -1,11 +1,12 @@
 import Header from "@/components/Header";
-
+import TodoInput from "@/components/TodoInput";
 export default function Home() {
   return (
     <div>
       <Header />
-      <div>input</div>
-      <div>item Todo Done</div>
+      <main className="w-full flex flex-col items-center">
+        <TodoInput />
+      </main>
     </div>
   );
 }
