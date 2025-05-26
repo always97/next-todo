@@ -14,8 +14,9 @@ export default function TodoItem({ todo, onToggleTodo }: TodoItemProps) {
 
   return (
     <li
-      className={`w-[588px] h-[50px] px-6 py-2 border-2 border-slate-900 rounded-[27px] flex items-center justify-between
-        ${todo.isCompleted ? "bg-violet-100" : "bg-white"}`}
+      className={`w-full max-w-[588px] h-[50px] px-6 py-2 border-2 border-slate-900 rounded-[27px] 
+              flex items-center justify-between 
+              ${todo.isCompleted ? "bg-violet-100" : "bg-white"}`}
     >
       <div className="flex items-center">
         <button
@@ -45,14 +46,6 @@ export default function TodoItem({ todo, onToggleTodo }: TodoItemProps) {
             {todo.name}
           </span>
         </Link>
-        {/* <span
-          className={`ml-2 text-lg font-medium
-            ${
-              todo.isCompleted ? "text-gray-500 line-through" : "text-slate-900"
-            }`}
-        >
-          {todo.name}
-        </span> */}
       </div>
     </li>
   );

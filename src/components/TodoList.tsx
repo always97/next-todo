@@ -3,7 +3,6 @@ import TodoItem from "./TodoItem";
 import Image from "next/image";
 
 interface TodoListProps {
-  title: string;
   todos: Todo[];
   onToggleTodo: (id: number) => void;
 }
@@ -13,8 +12,8 @@ export default function TodoList({ todos, onToggleTodo }: TodoListProps) {
   const doneTasks = todos.filter((todo) => todo.isCompleted);
 
   return (
-    <div className="flex justify-center gap-8 w-full">
-      <section className="w-[588px]">
+    <div className="flex flex-col md:flex-row justify-center gap-8 w-full flex-wrap">
+      <section className="w-full max-w-[588px] flex-1 min-w-[300px]">
         <h2 className="mb-4">
           <Image
             src="/todo.png"
@@ -49,7 +48,7 @@ export default function TodoList({ todos, onToggleTodo }: TodoListProps) {
         )}
       </section>
 
-      <section className="w-[588px]">
+      <section className="w-full max-w-[588px] flex-1 min-w-[300px]">
         <h2 className="mb-4">
           <Image
             src="/done.png"

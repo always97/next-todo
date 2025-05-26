@@ -122,7 +122,7 @@ export default function Home() {
         {/* 로딩 에러 표시 (임시) */}
         {isLoading && <p className="text-center text-blue-500">Loading...</p>}
         {error && <div className="text-red-500 mt-4">{error}</div>}
-        <div className="mt-6 w-full flex justify-center gap-8">
+        <div className="mt-6 w-full">
           <TodoList
             title="TODO"
             todos={todos}
