@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# To Do 서비스 - 할 일 목록 관리 프로젝트
 
-## Getting Started
+---
 
-First, run the development server:
+## ✅ 평가 체크리스트
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+> 제출 전, 아래 체크리스트를 참고하여 프로젝트 요구사항이 모두 충족되었는지 점검해 주세요.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. 공통 사항
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- [✅] **컬러 시스템 설정**  
+  디자인 시안에 따른 컬러 시스템이 일관성 있게 적용되었나요?
 
-## Learn More
+- [✅] **공용 컴포넌트 작성**  
+  버튼, 입력창 등 공통 UI 요소가 재사용 가능한 컴포넌트로 잘 작성되었나요?
 
-To learn more about Next.js, take a look at the following resources:
+- [ ] **반응형 웹 디자인**
+  - [ ] 모바일 화면에서 레이아웃이 올바르게 작동하나요?
+  - [ ] 태블릿 화면에서 정상적으로 표시되나요?
+  - [✅] 데스크탑 화면에서 레이아웃이 깨지지 않나요?
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 2. 할 일 목록 페이지 (`/`)
 
-## Deploy on Vercel
+- [✅] **목록 조회 기능**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+  - [✅] 로고 버튼 클릭 시 `/` 경로로 이동하며 새로고침이 정상적으로 작동하나요?
+  - [✅] 진행 중인 할 일과 완료된 할 일이 명확히 구분되어 표시되나요?
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [✅] **할 일 추가 기능**
+
+  - [✅] 할 일 입력 후 `추가하기` 버튼 클릭 또는 Enter 입력으로 할 일이 생성되나요?
+
+- [✅] **할 일 완료 처리**
+  - [✅] 진행 중인 할 일 체크박스 클릭 시 완료 상태로 변경되나요?
+  - [✅] 완료된 할 일 체크박스 클릭 시 다시 진행 중 상태로 변경되나요?
+
+---
+
+### 3. 할 일 상세 페이지 (`/items/{itemId}`)
+
+- [✅] **할 일 수정 기능**
+
+  - [✅] 할 일 이름을 수정할 수 있나요?
+  - [✅] 진행 상태를 변경할 수 있나요?
+  - [✅] 메모를 추가할 수 있나요?
+  - [ ] 이미지 첨부 가능하며, 첨부 조건(영문 파일명, 5MB 이하)도 충족하나요?
+  - [✅] `수정 완료` 버튼 클릭 시 수정 사항이 반영되고, 목록 페이지로 정상 이동되나요?
+  - [✅] 재접속 시 추가한 메모와 이미지가 올바르게 보여지나요?
+
+- [✅] **할 일 삭제 기능**
+  - [✅] `삭제하기` 버튼 클릭 시 해당 할 일이 삭제되고 목록 페이지로 이동되나요?
+
+---
+
+### 4. 배포
+
+- [✅] 배포된 서비스에 다른 계정(비개발자 계정 등)으로도 접근이 가능한가요?
+
+---
+
+### 향후 개선할 점
+
+- tenantId 환경변수 설정
+- 반응형 디자인 개선
+- 이미지 첨부 기능
+- api 코드 분리 및 axios 인스턴스로 관리
