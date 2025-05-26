@@ -57,7 +57,7 @@ export default function Home() {
       isCompleted: !todoToUpdate.isCompleted,
     };
 
-    // UI 먼저
+    // 낙관적 업데이트
     setTodos((prevTodos) =>
       prevTodos.map((todo) => (todo.id === id ? updatedTodo : todo))
     );

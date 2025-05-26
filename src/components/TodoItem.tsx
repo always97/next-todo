@@ -1,5 +1,6 @@
 import { Todo } from "@/app/interfaces";
 import Image from "next/image";
+import Link from "next/link";
 
 interface TodoItemProps {
   todo: Todo;
@@ -29,14 +30,29 @@ export default function TodoItem({ todo, onToggleTodo }: TodoItemProps) {
             className="block"
           />
         </button>
-        <span
+        <Link
+          href={`/items/${todo.id}`}
+          className="flex-grow cursor-pointer group"
+        >
+          <span
+            className={`ml-2 text-lg font-medium group-hover:text-blue-600 transition-colors
+                        ${
+                          todo.isCompleted
+                            ? "text-gray-500 line-through group-hover:text-blue-400"
+                            : "text-slate-900"
+                        }`}
+          >
+            {todo.name}
+          </span>
+        </Link>
+        {/* <span
           className={`ml-2 text-lg font-medium
             ${
               todo.isCompleted ? "text-gray-500 line-through" : "text-slate-900"
             }`}
         >
           {todo.name}
-        </span>
+        </span> */}
       </div>
     </li>
   );
