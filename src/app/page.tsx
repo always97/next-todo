@@ -123,11 +123,7 @@ export default function Home() {
         {isLoading && <p className="text-center text-blue-500">Loading...</p>}
         {error && <div className="text-red-500 mt-4">{error}</div>}
         <div className="mt-6 w-full">
-          <TodoList
-            title="TODO"
-            todos={todos}
-            onToggleTodo={handleToggleTodo}
-          />
+          <TodoList todos={todos} onToggleTodo={handleToggleTodo} />
         </div>
       </main>
     </div>
