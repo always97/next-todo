@@ -12,12 +12,6 @@ export default function TodoList({ todos, onToggleTodo }: TodoListProps) {
   const todoTasks = todos.filter((todo) => !todo.isCompleted);
   const doneTasks = todos.filter((todo) => todo.isCompleted);
 
-  if (todos.length === 0) {
-    return (
-      <p className="text-center text-gray-500 mt-8">할 일이 없습니다! 🎉</p>
-    );
-  }
-
   return (
     <div className="flex justify-center gap-8 w-full">
       <section className="w-[588px]">
@@ -31,7 +25,21 @@ export default function TodoList({ todos, onToggleTodo }: TodoListProps) {
           />
         </h2>
         {todoTasks.length === 0 ? (
-          <p className="text-gray-500">모든 할 일을 완료했어요! 👍</p>
+          <div className="flex flex-col items-center justify-center mt-8 space-y-2">
+            <Image
+              src="/empty-Todo-Large.png"
+              alt="비어 있음 안내 이미지"
+              width={240}
+              height={240}
+              className="object-contain"
+            />
+            <p className="text-[16px] font-bold text-center leading-[100%] text-slate-400 font-nanum">
+              할 일이 없어요.
+            </p>
+            <p className="text-[16px] font-bold text-center leading-[100%] text-slate-400 font-nanum">
+              TODO를 새롭게 추가해주세요!
+            </p>
+          </div>
         ) : (
           <ul className="space-y-3">
             {todoTasks.map((todo) => (
@@ -52,7 +60,21 @@ export default function TodoList({ todos, onToggleTodo }: TodoListProps) {
           />
         </h2>
         {doneTasks.length === 0 ? (
-          <p className="text-gray-500">아직 완료한 일이 없어요.</p>
+          <div className="flex flex-col items-center justify-center mt-8 space-y-2">
+            <Image
+              src="/empty-Done-Large.png"
+              alt="비어 있음 안내 이미지"
+              width={240}
+              height={240}
+              className="object-contain"
+            />
+            <p className="text-[16px] font-bold text-center leading-[100%] text-slate-400 font-nanum">
+              아직 다 한 일이 없어요.
+            </p>
+            <p className="text-[16px] font-bold text-center leading-[100%] text-slate-400 font-nanum">
+              해야 할 일을 체크해보세요!
+            </p>
+          </div>
         ) : (
           <ul className="space-y-3">
             {doneTasks.map((todo) => (

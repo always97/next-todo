@@ -28,6 +28,9 @@ const config: Config = {
           800: "#92400E",
         },
       },
+      fontFamily: {
+        nanum: ["NanumSquare", "sans-serif"],
+      },
     },
   },
   plugins: [],
