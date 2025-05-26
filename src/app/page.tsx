@@ -8,7 +8,7 @@ import TodoList from "@/components/TodoList";
 import { Todo } from "@/app/interfaces";
 
 // 추후 환경변수로 관리
-const TENANT_ID = "always";
+const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID;
 
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);

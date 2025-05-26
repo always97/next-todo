@@ -7,7 +7,7 @@ import axios, { AxiosError } from "axios";
 import Image from "next/image";
 import Header from "@/components/Header";
 
-const TENANT_ID = "always";
+const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID;
 
 export default function TodoDetail() {
   const { itemId } = useParams();
