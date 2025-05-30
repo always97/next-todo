@@ -155,11 +155,11 @@ export default function TodoDetail() {
     }
   };
 
-  // 1. 파일명 유효성 검사
   const handleAddImage = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // 1. 파일명 유효성 검사
     const isValidName = /^[a-zA-Z0-9._-]+$/.test(file.name);
     if (!isValidName) {
       setError(

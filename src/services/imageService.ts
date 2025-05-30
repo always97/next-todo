@@ -17,7 +17,5 @@ export const uploadImage = async (file: File): Promise<string> => {
       },
     }
   );
-  console.log("Image upload response:", response.data);
-
   return response.data.secure_url;
 };
