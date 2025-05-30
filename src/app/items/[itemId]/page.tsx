@@ -164,14 +164,14 @@ export default function TodoDetail() {
     // 1. 파일명 영어만 허용
     const isEnglishOnly = /^[a-zA-Z]+$/.test(fileNameWithoutExtension);
     if (!isEnglishOnly) {
-      setError("파일명은 영어 알파벳만 사용할 수 있습니다.");
+      alert("파일명은 영어 알파벳만 사용할 수 있습니다.");
       return;
     }
 
     // 2. 파일 크기 검사 (5MB 이하)
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      setError("파일 크기는 5MB 이하만 업로드할 수 있습니다.");
+      alert("파일 크기는 5MB 이하만 업로드할 수 있습니다.");
       return;
     }
 
