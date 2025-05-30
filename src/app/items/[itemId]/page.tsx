@@ -11,6 +11,8 @@ import { todoService } from "@/services/todoService";
 import { uploadImage } from "@/services/imageService";
 import IconButton from "@/components/ui/IconButton";
 import ImageButton from "@/components/ui/ImageButton";
+import LoadingOverlay from "@/components/ui/LoadingOverlay";
+import StatusDisplay from "@/components/ui/StatusDisplay";
 
 const handleApiError = (err: unknown, defaultMessage: string): string => {
   if (axios.isAxiosError(err)) {
@@ -170,7 +172,15 @@ export default function TodoDetail() {
     }
   };
 
-  if (isLoading) return <p className="text-center mt-10">로딩 중...</p>;
+  if (isLoading)
+    return (
+      <p className="text-center mt-10">
+        <StatusDisplay
+          isLoading={isLoading}
+          loadingText={"상세정보를 가져오는중입니다.."}
+        />
+      </p>
+    );
   if (error)
     return <p className="text-center mt-10 text-red-500">에러: {error}</p>;
   if (!todo)
@@ -246,28 +256,11 @@ export default function TodoDetail() {
 
               {/* 업로딩 표시 */}
               {isUploading && (
-                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10">
-                  <svg
-                    className="animate-spin h-8 w-8 text-gray-500"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                    />
-                  </svg>
-                </div>
+                <LoadingOverlay
+                  show={isUploading}
+                  message="이미지 업로드 중..."
+                  size={40}
+                />
               )}
 
               <input

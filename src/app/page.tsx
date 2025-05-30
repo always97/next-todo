@@ -96,10 +96,16 @@ export default function Home() {
       <Header />
       <main className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 lg:px-12">
         <TodoInput onAddTodo={handleAddTodo} />
-        <StatusDisplay isLoading={isLoading} error={error} />
-        <div className="mt-6 w-full">
-          <TodoList todos={todos} onToggleTodo={handleToggleTodo} />
-        </div>
+        <StatusDisplay
+          isLoading={isLoading}
+          loadingText={"할 일 목록을 로딩 중입니다.."}
+          error={error}
+        />
+        {!isLoading && !error && (
+          <div className="mt-6 w-full">
+            <TodoList todos={todos} onToggleTodo={handleToggleTodo} />
+          </div>
+        )}
       </main>
     </div>
   );
