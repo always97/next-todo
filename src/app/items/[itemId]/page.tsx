@@ -155,9 +155,25 @@ export default function TodoDetail() {
     }
   };
 
+  // 1. 파일명 유효성 검사
   const handleAddImage = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const isValidName = /^[a-zA-Z0-9._-]+$/.test(file.name);
+    if (!isValidName) {
+      setError(
+        "파일명은 영문자, 숫자, 하이픈(-), 언더스코어(_), 점(.)만 사용할 수 있습니다."
+      );
+      return;
+    }
+
+    // 2. 파일 크기 검사 (5MB 이하)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setError("파일 크기는 5MB 이하만 업로드할 수 있습니다.");
+      return;
+    }
 
     setIsUploading(true);
     setError(null);
