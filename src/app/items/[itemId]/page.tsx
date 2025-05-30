@@ -1,134 +1,172 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Todo } from "@/app/interfaces";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
+
 import Image from "next/image";
 import Header from "@/components/Header";
+import { Todo } from "@/types/todo";
+import { todoService } from "@/services/todoService";
+import { uploadImage } from "@/services/imageService";
+import IconButton from "@/components/ui/IconButton";
+import ImageButton from "@/components/ui/ImageButton";
 
-const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID;
+const handleApiError = (err: unknown, defaultMessage: string): string => {
+  if (axios.isAxiosError(err)) {
+    const serverMessage = (err.response?.data as { message?: string })?.message;
+    if (err.response?.status === 404) {
+      return "해당 항목을 찾을 수 없습니다.";
+    }
+    return serverMessage || err.message || defaultMessage;
+  } else if (err instanceof Error) {
+    return err.message;
+  }
+  return defaultMessage;
+};
 
 export default function TodoDetail() {
-  const { itemId } = useParams();
+  const params = useParams();
+  const itemId = params?.itemId as string;
   const router = useRouter();
 
   const [todo, setTodo] = useState<Todo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [editedName, setEditedName] = useState("");
   const [editedMemo, setEditedMemo] = useState<string | null>(null);
+  const [editedImageUrl, setEditedImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!itemId) {
+      setError("잘못된 접근입니다. 아이템 ID가 없습니다.");
+      setIsLoading(false);
+      return;
+    }
+
     const fetchTodoDetail = async () => {
       setIsLoading(true);
       setError(null);
-
       try {
-        const { data } = await axios.get(
-          `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}/items/${itemId}`
-        );
-        setTodo(data);
-        setEditedName(data.name);
-        setEditedMemo(data.memo);
+        const fetchedTodo = await todoService.fetchTodoById(itemId);
+        setTodo(fetchedTodo);
+        setEditedName(fetchedTodo.name);
+        setEditedMemo(fetchedTodo.memo ?? "");
+        setEditedImageUrl(fetchedTodo.imageUrl ?? null);
       } catch (err) {
-        console.error("Error fetching todo detail:", err);
-        let errorMessage = "Todo 정보를 불러오는데 실패했습니다.";
-
-        if (axios.isAxiosError(err)) {
-          const axiosError = err as AxiosError<{ message?: string }>;
-          errorMessage =
-            axiosError.response?.data?.message ||
-            axiosError.message ||
-            errorMessage;
-          if (axiosError.response?.status === 404) {
-            errorMessage = "해당 Todo 항목을 찾을 수 없습니다.";
-          }
-        } else if (err instanceof Error) {
-          errorMessage = err.message;
-        }
-
-        setError(errorMessage);
+        setError(handleApiError(err, "Todo 정보를 불러오는데 실패했습니다."));
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (itemId) {
-      fetchTodoDetail();
-    } else {
-      setIsLoading(false);
-      setError("잘못된 접근입니다. 아이템 ID가 없습니다.");
-    }
+    fetchTodoDetail();
   }, [itemId]);
+
+  const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setEditedName(e.target.value);
+  };
+
+  const handleMemoChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setEditedMemo(e.target.value);
+  };
+
   // 업데이트 함수
-  const handleUpdate = async () => {
-    if (!todo) return;
+  const handleUpdate = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!todo || isUpdating || isToggling || isDeleting) return;
+
+    setIsUpdating(true);
+    setError(null);
     try {
-      await axios.patch(
-        `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}/items/${todo.id}`,
-        {
-          name: editedName,
-          memo: editedMemo ?? "",
-          isCompleted: todo.isCompleted,
-        }
+      const trimmedMemo = (editedMemo ?? "").trim();
+      const payload = {
+        name: editedName.trim(),
+        memo: trimmedMemo === "" ? undefined : trimmedMemo,
+        isCompleted: todo.isCompleted,
+        imageUrl: editedImageUrl === null ? undefined : editedImageUrl,
+      };
+      const updatedTodo = await todoService.updateTodoDetail(todo.id, payload);
+      setTodo((prevTodo) =>
+        prevTodo ? { ...prevTodo, ...updatedTodo } : null
       );
       alert("수정 완료");
-      router.refresh();
       router.push("/");
     } catch (err) {
-      alert(`수정 실패 : ${err}`);
+      setError(handleApiError(err, "수정 중 에러가 발생했습니다."));
+    } finally {
+      setIsUpdating(false);
     }
   };
   // 삭제 함수
   const handleDelete = async () => {
-    if (!todo) return;
-    if (!confirm(`'${todo.name}'을(를) 삭제하시겠습니까?`)) return;
+    if (!todo || isDeleting || isToggling || isUpdating) return;
+    if (!confirm(`'${todo.name}' 항목을 삭제하시겠습니까?`)) return;
 
+    setIsDeleting(true);
+    setError(null);
     try {
-      await axios.delete(
-        `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}/items/${todo.id}`
-      );
+      await todoService.deleteTodo(todo.id);
       alert("삭제 완료");
       router.push("/");
     } catch (err) {
-      alert(`삭제 실패 : ${err}`);
+      setError(handleApiError(err, "삭제 중 에러가 발생했습니다."));
+    } finally {
+      setIsDeleting(false);
     }
   };
-  // 이미지 추가 함수
-  const handleAddImage = () => {
-    // 이미지 추가 로직 구현
-    alert("이미지 추가 기능은 아직 구현되지 않았습니다.");
-  };
-  // 할 일 토글 함수
-  const handleToggleTodo = async () => {
-    if (!todo) return;
 
-    const previousTodo = { ...todo };
-    const updatedTodo = { ...todo, isCompleted: !todo.isCompleted };
+  const handleToggleComplete = async () => {
+    if (!todo || isToggling || isUpdating || isDeleting) return; // 다른 작업 중이면 실행 방지
 
-    // 낙관적 업데이트
-    setTodo(updatedTodo);
+    setIsToggling(true);
+    setError(null);
+
+    const newCompletedState = !todo.isCompleted;
 
     try {
-      await axios.patch(
-        `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}/items/${todo.id}`,
-        { isCompleted: updatedTodo.isCompleted }
+      setTodo((prevTodo) => {
+        if (!prevTodo) return null;
+        return { ...prevTodo, isCompleted: newCompletedState };
+      });
+
+      const updatedTodo = await todoService.updateTodoDetail(todo.id, {
+        isCompleted: newCompletedState,
+      });
+
+      setTodo((prevTodo) =>
+        prevTodo ? { ...prevTodo, ...updatedTodo } : null
       );
     } catch (err) {
-      setTodo(previousTodo);
+      setTodo((prevTodo) => {
+        if (!prevTodo) return null;
+        return { ...prevTodo, isCompleted: !newCompletedState }; // 원래 상태로 복구
+      });
+      setError(handleApiError(err, "상태 업데이트 중 에러가 발생했습니다."));
+    } finally {
+      setIsToggling(false);
+    }
+  };
 
-      if (axios.isAxiosError(err)) {
-        const axiosError = err as AxiosError<{ message?: string }>;
-        setError(
-          axiosError.response?.data?.message ||
-            axiosError.message ||
-            "Failed to update item."
-        );
-      } else {
-        setError("An unexpected error occurred while updating the item.");
-      }
+  const handleAddImage = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      const uploadedUrl = await uploadImage(file);
+      setEditedImageUrl(uploadedUrl);
+    } catch (err) {
+      setError(handleApiError(err, "이미지 업로드 중 문제가 발생했습니다."));
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -139,90 +177,147 @@ export default function TodoDetail() {
     return <p className="text-center mt-10">Todo를 찾을 수 없습니다.</p>;
 
   return (
-    <div>
+    <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
-      <main className="relative w-[1200px] h-[1020px] mx-auto bg-white shadow-lg rounded-md flex flex-col gap-[56px] pt-[40px] pl-[102px] pr-[102px]">
-        <div
-          className={`w-[996px] h-[64px] rounded-[24px] border-2 border-slate-900 ${
-            todo.isCompleted ? "bg-violet-100" : "bg-white"
-          } px-4 flex items-center justify-center gap-4`}
+      <main className="flex-1 w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto bg-white">
+        <form
+          onSubmit={handleUpdate}
+          className="rounded-lg py-4 sm:py-6 md:py-8 px-6 sm:px-8 md:px-24 space-y-6 md:space-y-8"
         >
-          <div className="flex items-center justify-center gap-4 w-full ">
-            <Image
-              src={
-                todo.isCompleted
-                  ? "/todo-done-check.png"
-                  : "/todo-default-check.png"
-              }
-              alt="체크 상태"
-              className="cursor-pointer"
-              width={32}
-              height={32}
-              onClick={handleToggleTodo}
-            />
-            <input
-              value={editedName}
-              onChange={(e) => setEditedName(e.target.value)}
-              className="w-auto font-[NanumSquare] font-bold text-[20px] leading-[100%] tracking-[0%] underline decoration-solid decoration-1 bg-transparent outline-none"
-              placeholder="할 일 제목"
-            />
+          {/* 제목 영역 */}
+          <div
+            className={`w-full max-w-full h-16 rounded-[24px] border-2 border-slate-900 ${
+              todo.isCompleted ? "bg-violet-100" : "bg-white"
+            } px-4 flex items-center justify-center mx-auto`}
+          >
+            <div className="inline-flex items-center gap-1">
+              <IconButton
+                src={
+                  todo.isCompleted
+                    ? "/todo-done-check.png"
+                    : "/todo-default-check.png"
+                }
+                alt={todo.isCompleted ? "완료됨" : "미완료"}
+                onClick={handleToggleComplete}
+                disabled={isToggling || isUpdating || isDeleting}
+                aria-label={todo.isCompleted ? "미완료로 변경" : "완료로 변경"}
+                className={`flex-shrink-0 transition-opacity ${
+                  isToggling || isUpdating || isDeleting
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-gray-200"
+                }`}
+                size={32}
+              />
+              <input
+                type="text"
+                value={editedName}
+                onChange={handleNameChange}
+                className="font-title bg-transparent"
+                placeholder="할 일 제목"
+                disabled={isUpdating || isDeleting || isToggling}
+                size={10}
+              />
+            </div>
           </div>
-        </div>
+          {/* 이미지 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="relative w-full aspect-[4/3] rounded-2xl bg-slate-50 border-2 border-dashed border-slate-300 flex items-center justify-center">
+              {editedImageUrl || todo.imageUrl ? (
+                // 업로드된 이미지
+                <div className="relative w-3/4 h-3/4">
+                  <Image
+                    src={editedImageUrl ?? todo.imageUrl!}
+                    alt="첨부 이미지"
+                    fill
+                    sizes="100%"
+                    className="object-contain rounded-xl"
+                  />
+                </div>
+              ) : (
+                // 기본 이미지
+                <Image
+                  src="/img.png"
+                  alt="기본 이미지"
+                  width={64}
+                  height={64}
+                  className="object-contain"
+                />
+              )}
 
-        <div className="flex gap-6">
-          {/* 이미지 첨부 */}
-          <div className="relative w-[384px] h-[311px] rounded-[24px] bg-slate-50 border-2 border-dashed border-slate-300 flex items-center justify-center">
-            <Image
-              src="/img.png"
-              alt="첨부 이미지"
-              width={64}
-              height={64}
-              className="object-cover"
-            />
-            <button
-              type="button"
-              onClick={handleAddImage}
-              className="absolute bottom-4 right-4 w-[64px] h-[64px] bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100 transition-transform duration-200"
-            >
-              <img
+              {/* 업로딩 표시 */}
+              {isUploading && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10">
+                  <svg
+                    className="animate-spin h-8 w-8 text-gray-500"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    />
+                  </svg>
+                </div>
+              )}
+
+              <input
+                type="file"
+                accept="image/*"
+                id="fileInput"
+                className="hidden"
+                onChange={handleAddImage}
+              />
+              <ImageButton
                 src="/Type=Plus.png"
                 alt="추가 버튼"
-                className="w-full h-full object-contain transform hover:scale-110 transition-transform duration-200"
+                onClick={() => document.getElementById("fileInput")?.click()}
+                className="absolute bottom-4 right-4 w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100 transition-transform duration-200"
               />
-            </button>
-          </div>
-
-          {/* 메모 */}
-          <div className="w-[588px] h-[311px] bg-[url('/memo.png')] bg-cover border rounded-[24px] p-4 relative">
-            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 font-[NanumSquare] font-extrabold text-[16px] leading-[100%] text-amber-800 select-none pointer-events-none">
-              memo
             </div>
-            <textarea
-              value={editedMemo ?? ""}
-              onChange={(e) => setEditedMemo(e.target.value)}
-              className="w-full h-full bg-transparent resize-none text-slate-800 outline-none pt-8"
-              placeholder="할 일 내용을 입력하세요"
-            />
-          </div>
-        </div>
 
-        {/* 버튼 영역 */}
-        <div className="flex justify-end gap-4">
-          <button onClick={handleUpdate} className="focus:outline-none p-0">
-            <img
+            {/* 메모 */}
+            <div className="w-full aspect-[4/3] bg-[url('/memo.png')] bg-cover border rounded-2xl p-4 relative">
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 font-[NanumSquare] font-extrabold text-sm text-amber-800 select-none pointer-events-none">
+                memo
+              </div>
+              <textarea
+                value={editedMemo ?? ""}
+                onChange={handleMemoChange}
+                className="font-body w-full h-full bg-transparent resize-none outline-none pt-8"
+                placeholder="할 일 내용을 입력하세요"
+              />
+            </div>
+          </div>
+          {error && !isLoading && !isToggling && !isUpdating && !isDeleting && (
+            <p className="text-red-500 text-sm text-center">{error}</p>
+          )}
+          {/* 버튼 영역 */}
+          <div className="flex justify-center md:justify-end gap-4 flex-wrap">
+            <ImageButton
               src="/Edit-Large-Default-Btn.png"
               alt="수정 완료"
-              className="cursor-pointer w-[168px] h-[56px]"
+              onClick={handleUpdate}
+              className="w-40 h-14"
             />
-          </button>
-          <button onClick={handleDelete} className="focus:outline-none p-0">
-            <img
+
+            <ImageButton
               src="/Delete-Large-Btn.png"
               alt="삭제하기"
-              className="cursor-pointer w-[168px] h-[56px]"
+              onClick={handleDelete}
+              className="w-40 h-14"
             />
-          </button>
-        </div>
+          </div>
+        </form>
       </main>
     </div>
   );
