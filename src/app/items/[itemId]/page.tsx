@@ -159,12 +159,12 @@ export default function TodoDetail() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 1. 파일명 유효성 검사
-    const isValidName = /^[a-zA-Z0-9._-]+$/.test(file.name);
-    if (!isValidName) {
-      setError(
-        "파일명은 영문자, 숫자, 하이픈(-), 언더스코어(_), 점(.)만 사용할 수 있습니다."
-      );
+    const fileNameWithoutExtension = file.name.split(".")[0];
+
+    // 1. 파일명 영어만 허용
+    const isEnglishOnly = /^[a-zA-Z]+$/.test(fileNameWithoutExtension);
+    if (!isEnglishOnly) {
+      setError("파일명은 영어 알파벳만 사용할 수 있습니다.");
       return;
     }
 
