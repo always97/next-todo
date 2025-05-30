@@ -19,3 +19,17 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 폰트 타이틀과 바디에 사용되는 속성 정의 */
+@layer utilities {
+  .font-title {
+    @apply font-nanum text-[20px] font-bold leading-[100%] tracking-[0]
+      underline decoration-solid decoration-[0px] underline-offset-[3px]
+      text-center align-middle text-slate-900;
+  }
+
+  .font-body {
+    @apply font-nanum text-[16px] font-normal leading-[100%] tracking-[0]
+      text-center align-middle text-slate-800;
+  }
+}

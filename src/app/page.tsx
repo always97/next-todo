@@ -1,48 +1,62 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
+import { Todo } from "@/types/todo";
+import { todoService } from "@/services/todoService";
+import StatusDisplay from "@/components/ui/StatusDisplay";
+
 import Header from "@/components/Header";
 import TodoInput from "@/components/TodoInput";
 import TodoList from "@/components/TodoList";
-import { Todo } from "@/app/interfaces";
-
-// 추후 환경변수로 관리
-const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID;
 
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleApiError = (err: unknown, defaultMessage: string) => {
+    if (axios.isAxiosError(err)) {
+      const serverMessage = (err.response?.data as { message?: string })
+        ?.message;
+      setError(serverMessage || err.message || defaultMessage);
+    } else if (err instanceof Error) {
+      setError(err.message);
+    } else {
+      setError(defaultMessage);
+    }
+  };
+
+  useEffect(() => {
+    const loadTodos = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const fetchedTodos = await todoService.fetchTodos();
+        setTodos(fetchedTodos);
+      } catch (err) {
+        handleApiError(err, "할 일 목록을 불러오는데 실패했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTodos();
+  }, []);
+
   const handleAddTodo = async (name: string) => {
-    if (name.trim() === "") return;
-
+    if (name.trim() === "") {
+      setError("할 일 내용을 입력해주세요.");
+      return;
+    }
     setIsLoading(true);
-
-    const newTodoRequest = { name };
+    setError(null);
 
     try {
-      // 추후 인스턴스로 관리
-      const response = await axios.post<Todo>(
-        `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}/items`,
-        newTodoRequest
-      );
-
-      const addedTodo: Todo = response.data;
+      const addedTodo = await todoService.addTodo(name);
       setTodos((prevTodos) => [...prevTodos, addedTodo]);
     } catch (err) {
-      console.error("Error adding todo:", err);
-      if (axios.isAxiosError(err)) {
-        const axiosError = err as AxiosError<{ message?: string }>;
-        setError(
-          axiosError.response?.data?.message ||
-            axiosError.message ||
-            "Failed to add item."
-        );
-      } else {
-        setError("An unexpected error occurred while adding the item.");
-      }
+      handleApiError(err, "할 일을 추가하는데 실패했습니다.");
     } finally {
       setIsLoading(false);
     }
@@ -52,76 +66,37 @@ export default function Home() {
     const todoToUpdate = todos.find((todo) => todo.id === id);
     if (!todoToUpdate) return;
 
+    // 낙관적 업데이트
     const updatedTodo = {
       ...todoToUpdate,
       isCompleted: !todoToUpdate.isCompleted,
     };
-
-    // 낙관적 업데이트
     setTodos((prevTodos) =>
       prevTodos.map((todo) => (todo.id === id ? updatedTodo : todo))
     );
+    setError(null);
 
     try {
-      await axios.patch<Todo>(
-        `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}/items/${id}`,
-        { isCompleted: updatedTodo.isCompleted }
-      );
+      await todoService.updateTodo(id, {
+        isCompleted: updatedTodo.isCompleted,
+      });
     } catch (err) {
-      console.error("Error updating todo on server:", err);
-      // 에러 발생 시 롤백
+      handleApiError(
+        err,
+        `할 일 (ID: ${id}) 상태를 업데이트하는데 실패했습니다.`
+      );
       setTodos((prevTodos) =>
         prevTodos.map((todo) => (todo.id === id ? todoToUpdate : todo))
       );
-      if (axios.isAxiosError(err)) {
-        const axiosError = err as AxiosError<{ message?: string }>;
-        setError(
-          axiosError.response?.data?.message ||
-            axiosError.message ||
-            "Failed to update item."
-        );
-      } else {
-        setError("An unexpected error occurred while updating the item.");
-      }
     }
   };
 
-  useEffect(() => {
-    const fetchTodos = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await axios.get(
-          `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}/items`
-        );
-        setTodos(response.data);
-      } catch (err) {
-        console.error("Error fetching todos:", err);
-        if (axios.isAxiosError(err)) {
-          const axiosError = err as AxiosError<{ message?: string }>;
-          setError(
-            axiosError.response?.data?.message ||
-              axiosError.message ||
-              "Failed to load todos."
-          );
-        } else {
-          setError("An unexpected error occurred while fetching todos.");
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchTodos();
-  }, []);
-
   return (
-    <div className="bg-gray-50 min-h-screen flex flex-col items-center">
+    <div className="bg-gray-100 min-h-screen flex flex-col items-center pb-6 sm:pb-12">
       <Header />
-      <main className="w-full flex flex-col items-center">
+      <main className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 lg:px-12">
         <TodoInput onAddTodo={handleAddTodo} />
-        {/* 로딩 에러 표시 (임시) */}
-        {isLoading && <p className="text-center text-blue-500">Loading...</p>}
-        {error && <div className="text-red-500 mt-4">{error}</div>}
+        <StatusDisplay isLoading={isLoading} error={error} />
         <div className="mt-6 w-full">
           <TodoList todos={todos} onToggleTodo={handleToggleTodo} />
         </div>
