@@ -304,7 +304,13 @@ export default function TodoDetail() {
           {/* 버튼 영역 */}
           <div className="flex justify-center md:justify-end gap-4 flex-wrap">
             <ImageButton
-              src="/Edit-Large-Default-Btn.png"
+              src={
+                editedName.trim() !== todo.name ||
+                (editedMemo ?? "") !== (todo.memo ?? "") ||
+                (editedImageUrl ?? "") !== (todo.imageUrl ?? "")
+                  ? "/Edit-Large-Active-Btn.png"
+                  : "/Edit-Large-Default-Btn.png"
+              }
               alt="수정 완료"
               onClick={handleUpdate}
               className="w-40 h-14"
